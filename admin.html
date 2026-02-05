@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="photo/logo.jpg">
+    <link rel="stylesheet" href="style.css">
+    <title>Admin - FLOWER-STORE</title>
+    <style>
+        .admin-container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            background: var(--clr-text-base);
+            border-radius: 12px;
+            color: var(--clr-background);
+        }
+        .admin-container h1 { color: var(--clr-cta); text-align: center; }
+        .admin-form label { display: block; margin-top: 12px; color: var(--clr-cta); font-weight: 600; }
+        .admin-form input, .admin-form textarea { width: 100%; padding: 10px; margin-top: 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); color: var(--clr-background); box-sizing: border-box; }
+        .admin-form button { margin-top: 20px; background: var(--clr-cta); color: var(--clr-text-base); border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; }
+        .admin-form button:hover { opacity: 0.9; }
+        .admin-message { margin-top: 12px; padding: 10px; border-radius: 8px; text-align: center; }
+        .admin-message.success { background: rgba(76, 175, 80, 0.2); color: #4CAF50; }
+        .admin-message.error { background: rgba(244, 67, 54, 0.2); color: #f44336; }
+        .back-link { text-align: center; margin-top: 20px; }
+        .back-link a { color: var(--clr-cta); text-decoration: none; }
+        @media (max-width: 600px) {
+            .admin-container { margin: 20px 10px; padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <a href="index.html" class="logo">FLOWER-STORE <span></span></a>
+        <a href="index.html" style="color: var(--clr-cta); text-decoration: none;">← Back</a>
+    </div>
+
+    <div class="admin-container">
+        <h1>Add New Product</h1>
+        <form class="admin-form" id="add-product-form">
+            <label>Product Name<br><input type="text" name="name" required placeholder="e.g. Red Roses"></label>
+            
+            <label>Small Price<br><input type="text" name="small" required placeholder="e.g. 10,000 IQD"></label>
+            <label>Medium Price<br><input type="text" name="medium" required placeholder="e.g. 15,000 IQD"></label>
+            <label>Large Price<br><input type="text" name="large" required placeholder="e.g. 20,000 IQD"></label>
+            
+            <label>Image URL<br><input type="text" name="image_url" placeholder="e.g. photo/red.jpg"></label>
+            
+            <label>Description<br><textarea name="description" rows="3" placeholder="Optional description"></textarea></label>
+            
+            <button type="submit">Add Product</button>
+        </form>
+        
+        <div id="message" style="display: none;"></div>
+        
+        <div class="back-link">
+            <a href="index.html">← Back to Store</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('add-product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageEl = document.getElementById('message');
+            
+            const payload = {
+                name: e.target.name.value,
+                image_url: e.target.image_url.value || 'photo/default.jpg',
+                small: e.target.small.value,
+                medium: e.target.medium.value,
+                large: e.target.large.value,
+                description: e.target.description.value
+            };
+            
+            try {
+                const res = await fetch('/api/products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    messageEl.className = 'admin-message success';
+                    messageEl.textContent = 'Product added successfully!';
+                    messageEl.style.display = 'block';
+                    e.target.reset();
+                    setTimeout(() => { messageEl.style.display = 'none'; }, 3000);
+                } else {
+                    messageEl.className = 'admin-message error';
+                    messageEl.textContent = 'Error: ' + (data.message || 'Failed to add product');
+                    messageEl.style.display = 'block';
+                }
+            } catch (err) {
+                messageEl.className = 'admin-message error';
+                messageEl.textContent = 'Network error: ' + err.message;
+                messageEl.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

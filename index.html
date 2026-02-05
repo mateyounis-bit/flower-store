@@ -35,6 +35,15 @@
 
 
     </div>
+    <div id="login-panel" style="display:none; padding:12px; background:#f7f7f7; border-bottom:1px solid #ddd;">
+        <form id="login-form" style="max-width:320px;">
+            <label>Username<br><input name="username" required></label><br>
+            <label>Password<br><input name="password" type="password" required></label><br>
+            <button type="submit">Sign in</button>
+            <button type="button" id="login-cancel">Cancel</button>
+        </form>
+    </div>
+
     <!--start scroll down-->
     <section class="hero" id="home">
         <div class="hero-content">
@@ -202,15 +211,13 @@
 
     <!--start contact-->
     <section class="contact" id="contact">
-        <h2>Contact Us</h2>
-        <div class="email">
-            <P>Email: example@example.com</P>
-        </div>
-        <div class="PhoneNumber">
-            <p>PhoneNumber: +123456789</p>
-
-        </div>
-
+        <form id="contact-form" style="max-width:480px;">
+            <h2>Contact Us</h2>
+            <label>Name<br><input name="name" required></label><br>
+            <label>Email<br><input name="email" type="email" required></label><br>
+            <label>Message<br><textarea name="message" rows="4" required></textarea></label><br>
+            <button type="submit">Send</button>
+        </form>
     </section>
 
     <!--end conatct-->
@@ -232,6 +239,192 @@
 
 
 
+    <!-- Order modal -->
+    <div id="order-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <button id="order-close" class="modal-close">×</button>
+            <h3 id="order-product">Order</h3>
+            <form id="order-form">
+                <label>Product<br><input id="order-product-input" name="product" readonly></label>
+                <label>Size<br>
+                    <select id="order-size" name="size">
+                        <option value="Small">Small</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Large">Large</option>
+                    </select>
+                </label>
+                <div style="margin:8px 0;">Price: <span id="order-price">-</span></div>
+                <label>Quantity<br><input id="order-qty" name="quantity" type="number" value="1" min="1"></label>
+                <label>Your name<br><input id="order-name" name="name" required></label>
+                <label>Phone<br><input id="order-phone" name="phone" required placeholder="e.g. +123456789"></label>
+                <label>Address<br><input id="order-address" name="address"></label>
+                <div style="margin-top:10px;">
+                    <button type="submit">Send to WhatsApp</button>
+                    <button type="button" id="order-cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', ()=>{
+    const loginBtn = document.querySelector('.navbar .btns .btn');
+    const loginPanel = document.getElementById('login-panel');
+    const loginCancel = document.getElementById('login-cancel');
+    if(loginBtn){
+      loginBtn.addEventListener('click', ()=>{
+          loginPanel.style.display = loginPanel.style.display === 'block' ? 'none' : 'block';
+      });
+    }
+    if(loginCancel){ loginCancel.addEventListener('click', ()=>{ loginPanel.style.display='none'; }); }
+
+    const lf = document.getElementById('login-form');
+    if(lf){
+      lf.addEventListener('submit', async (e)=>{
+          e.preventDefault();
+          const username = e.target.username.value;
+          const password = e.target.password.value;
+          try{
+              const res = await fetch('/api/login', {
+                  method:'POST', headers:{'Content-Type':'application/json'},
+                  body: JSON.stringify({username,password})
+              });
+              const data = await res.json();
+              if(data.success){
+                  alert('Login successful: '+data.user.username);
+                  loginPanel.style.display='none';
+              } else {
+                  alert('Login failed: '+(data.message||'Invalid credentials'));
+              }
+          }catch(err){ alert('Network error'); }
+      });
+    }
+
+    const cf = document.getElementById('contact-form');
+    if(cf){
+      cf.addEventListener('submit', async (e)=>{
+          e.preventDefault();
+          const payload = { name: e.target.name.value, email: e.target.email.value, message: e.target.message.value };
+          try{
+              const res = await fetch('/api/submit-form', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+              const data = await res.json();
+              if(data.success){ alert('Form submitted. Thank you!'); e.target.reset(); } else { alert('Submit failed.'); }
+          }catch(err){ alert('Network error'); }
+      });
+    }
+});
+</script>
+
+<script>
+// Order modal and WhatsApp flow
+(() => {
+    const modal = document.getElementById('order-modal');
+    const form = document.getElementById('order-form');
+    const closeBtn = document.getElementById('order-close');
+    const cancelBtn = document.getElementById('order-cancel');
+    const productInput = document.getElementById('order-product-input');
+    const productTitle = document.getElementById('order-product');
+    const sizeSelect = document.getElementById('order-size');
+    const priceSpan = document.getElementById('order-price');
+
+    // default WhatsApp number (replace with your number)
+    const WA_NUMBER = '+123456789';
+
+    function parsePrices(card){
+        const map = {};
+        const els = card.querySelectorAll('.price-options p');
+        els.forEach(p => {
+            const label = p.querySelector('span')?.textContent.replace(':','').trim();
+            const txt = p.textContent.replace(/\s+/g,' ').replace(/^[^\d]*/,'').trim();
+            if(label){ map[label] = txt; }
+        });
+        return map;
+    }
+
+    let currentPriceMap = null;
+    let currentSizeHandler = null;
+
+    function updatePriceFromMap(priceMap) {
+        const select = document.getElementById('order-size');
+        const sz = select ? select.value : null;
+        priceSpan.textContent = (sz && priceMap && priceMap[sz]) ? priceMap[sz] : '-';
+    }
+
+    function openModal(productName, priceMap) {
+        currentPriceMap = priceMap || null;
+        productInput.value = productName;
+        productTitle.textContent = 'Order: ' + productName;
+
+        const select = document.getElementById('order-size');
+        if (currentSizeHandler && select) {
+            select.removeEventListener('change', currentSizeHandler);
+            currentSizeHandler = null;
+        }
+
+        const handler = () => updatePriceFromMap(priceMap);
+        if (select) {
+            select.addEventListener('change', handler);
+            currentSizeHandler = handler;
+        }
+
+        updatePriceFromMap(priceMap);
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        modal.style.display = 'none';
+        const select = document.getElementById('order-size');
+        if (currentSizeHandler && select) {
+            select.removeEventListener('change', currentSizeHandler);
+            currentSizeHandler = null;
+        }
+        currentPriceMap = null;
+    }
+
+    // attach to card order buttons and product boxes
+    document.querySelectorAll('.card .btn').forEach(btn => {
+        btn.addEventListener('click', (e)=>{
+            const card = e.target.closest('.card');
+            if(!card) return;
+            const name = card.querySelector('h3')?.textContent || 'Product';
+            const prices = parsePrices(card);
+            openModal(name, prices);
+        });
+    });
+
+    document.querySelectorAll('.product-box').forEach(box => {
+        box.addEventListener('click', (e)=>{
+            e.preventDefault();
+            const productName = box.querySelector('strong')?.textContent || 'Product';
+            // find matching card by name and get prices from it
+            const matchingCard = Array.from(document.querySelectorAll('.card h3')).find(h3 => h3.textContent === productName)?.closest('.card');
+            const prices = matchingCard ? parsePrices(matchingCard) : {};
+            openModal(productName, prices);
+        });
+    });
+
+    if(closeBtn) closeBtn.addEventListener('click', closeModal);
+    if(cancelBtn) cancelBtn.addEventListener('click', closeModal);
+
+    form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        const pdata = {
+            product: productInput.value,
+            size: form.size.value,
+            price: priceSpan.textContent,
+            quantity: form.quantity.value,
+            name: form.name.value,
+            phone: form.phone.value,
+            address: form.address.value
+        };
+        const message = `Order%20from%20FLOWER-STORE%0AProduct:%20${encodeURIComponent(pdata.product)}%0ASize:%20${encodeURIComponent(pdata.size)}%0AQuantity:%20${encodeURIComponent(pdata.quantity)}%0APrice:%20${encodeURIComponent(pdata.price)}%0AName:%20${encodeURIComponent(pdata.name)}%0APhone:%20${encodeURIComponent(pdata.phone)}%0AAddress:%20${encodeURIComponent(pdata.address)}`;
+        const url = `https://api.whatsapp.com/send?phone=9647508107924&text=${message}`;
+
+        window.open(url, '_blank');
+        closeModal();
+    });
+})();
+</script>
 
 </body>
 

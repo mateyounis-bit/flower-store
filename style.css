@@ -334,3 +334,142 @@ hr {
     }
 }
 
+/* Form styling to match site design */
+.contact form,
+#login-panel form {
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+    max-width: 100%;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+
+.contact form label,
+#login-panel form label {
+    display: block;
+    color: var(--clr-cta);
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.contact form h2 {
+    margin: 0 0 12px 0;
+    text-align: center;
+    color: var(--clr-cta);
+    font-size: 1.6rem;
+}
+
+/* Order modal styles */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.modal-content {
+    background: var(--clr-text-base);
+    color: var(--clr-background);
+    padding: 20px;
+    border-radius: 12px;
+    width: 420px;
+    max-width: calc(100% - 32px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+.modal-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--clr-cta);
+}
+.modal-content h3 { color: var(--clr-cta); margin-top:0; }
+.modal-content label { display:block; margin-bottom:8px; color:var(--clr-cta); }
+.modal-content input, .modal-content select, .modal-content textarea {
+    width:100%; padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); box-sizing:border-box;
+    background: rgba(255,255,255,0.03); color: var(--clr-background);
+}
+.modal-content button { margin-top:8px; }
+.modal-content button[type="submit"] { background: var(--clr-cta); color: var(--clr-text-base); border: none; padding:10px 14px; border-radius:8px; cursor:pointer; }
+.modal-content button[type="button"] { background: transparent; color: var(--clr-cta); border: 1px solid rgba(255,255,255,0.06); padding:8px 12px; border-radius:8px; cursor:pointer; }
+
+@media (max-width: 600px) {
+  .modal-content select {
+    font-size: 16px !important;
+    padding: 12px 30px 12px 10px !important;
+    height: 45px;
+    min-height: 45px;
+  }
+}
+
+.contact form input[type="text"],
+.contact form input[type="email"],
+.contact form input[type="password"],
+.contact form textarea,
+#login-panel form input,
+#login-panel form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    margin-top: 6px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.12);
+    background: rgba(255,255,255,0.02);
+    color: var(--clr-background);
+    outline: none;
+    box-sizing: border-box;
+}
+
+.contact form textarea { resize: vertical; }
+
+.contact form button,
+#login-panel form button[type="submit"],
+#login-panel form button[type="button"] {
+    background: var(--clr-cta);
+    color: var(--clr-text-base);
+    border: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+#login-panel { background: var(--clr-text-base); }
+
+@media (max-width: 600px) {
+    .contact form, #login-panel form { padding: 12px; }
+}
+
+/* Centering rules for login panel and contact form */
+#login-panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 18px 12px;
+}
+
+#login-panel form {
+    width: 320px;
+    margin: 0 auto;
+}
+
+.contact {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 0;
+}
+
+.contact form {
+    width: 480px;
+    margin: 0 auto;
+}
+
